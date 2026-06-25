@@ -1,0 +1,22 @@
+# Gradle
+.gradle/
+build/
+local.properties
+
+# IntelliJ / Android Studio
+.idea/
+*.iml
+*.iws
+*.ipr
+.kotlin/
+
+# Visual Studio / VS Code solution cache
+.vs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs / temp
+*.log
+captures/

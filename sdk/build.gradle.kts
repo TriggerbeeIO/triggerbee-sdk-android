@@ -55,14 +55,18 @@ kotlin {
     }
 }
 
-// Dokka 1.9 + AGP 9 doesn't auto-discover the Android module's Kotlin source roots — without
-// this, dokkaHtml runs cleanly but emits an empty doc site. Applies to both the standalone
-// `dokkaHtml` task (driving the GitHub Pages site) and the `dokkaJavadoc` flavour vanniktech's
-// publish plugin uses for the Maven Central javadoc.jar.
+// Dokka 1.9 + AGP 9 + Kotlin 2.2 doesn't auto-discover the Android library module's Kotlin
+// source sets — the AGP integration registers zero source sets, so configureEach is a no-op
+// and Dokka emits an empty site. Explicitly create a "main" source set so Dokka always has
+// something to document. Applies to both standalone `dokkaHtml` (driving GitHub Pages) and the
+// `dokkaJavadoc` task vanniktech's publish plugin uses for the Maven Central javadoc.jar.
 tasks.withType<DokkaTask>().configureEach {
-    dokkaSourceSets.configureEach {
+    dokkaSourceSets.maybeCreate("main").apply {
         sourceRoots.from(file("src/main/kotlin"))
+        platform.set(org.jetbrains.dokka.Platform.jvm)
         jdkVersion.set(17)
+        reportUndocumented.set(false)
+        skipDeprecated.set(false)
     }
 }
 

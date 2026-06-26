@@ -32,24 +32,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Generate Dokka HTML
-        run: ./gradlew :sdk:dokkaHtml --no-configuration-cache --stacktrace --info
-
-      # Diagnostic: list what Dokka actually wrote and where, so an empty Pages site can be
-      # debugged from the workflow log without re-running locally.
-      - name: Inspect Dokka output
-        run: |
-          echo "=== sdk/build/dokka tree ==="
-          find sdk/build/dokka -maxdepth 4 -type d 2>/dev/null || echo "(no dokka dir)"
-          echo "=== file count + total size per dir ==="
-          for d in sdk/build/dokka/*/; do
-            if [ -d "$d" ]; then
-              count=$(find "$d" -type f | wc -l)
-              size=$(du -sh "$d" | cut -f1)
-              echo "$d  files=$count  size=$size"
-            fi
-          done
-          echo "=== sdk/build/dokka/html top-level entries ==="
-          ls -la sdk/build/dokka/html 2>/dev/null || echo "(missing)"
+        run: ./gradlew :sdk:dokkaHtml --no-configuration-cache --stacktrace
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

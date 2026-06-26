@@ -6,6 +6,8 @@ for pageload tracking, widget checks, identification, and goal logging.
 
 > **Status:** 0.1.0 — pre-1.0. The public API may change in minor releases until 1.0.
 
+**API reference:** <https://triggerbeeio.github.io/triggerbee-sdk-android/> — auto-generated from KDoc on every `main` push.
+
 ## Integration checklist
 
 A copy-paste checklist for getting Triggerbee live in your app. The next section has the

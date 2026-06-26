@@ -28,8 +28,8 @@ jobs:
       - name: Run unit tests
         run: ./gradlew :sdk:test --stacktrace
 
-      - name: Build sample
-        run: ./gradlew :sample:assembleDebug --stacktrace
+      - name: Assemble release AAR
+        run: ./gradlew :sdk:assembleRelease --stacktrace
 
       - name: Upload test report on failure
         if: failure()

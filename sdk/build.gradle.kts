@@ -1,4 +1,5 @@
 import com.vanniktech.maven.publish.AndroidSingleVariantLibrary
+import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -51,6 +52,17 @@ kotlin {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_17)
         freeCompilerArgs.add("-Xexplicit-api=strict")
+    }
+}
+
+// Dokka 1.9 + AGP 9 doesn't auto-discover the Android module's Kotlin source roots — without
+// this, dokkaHtml runs cleanly but emits an empty doc site. Applies to both the standalone
+// `dokkaHtml` task (driving the GitHub Pages site) and the `dokkaJavadoc` flavour vanniktech's
+// publish plugin uses for the Maven Central javadoc.jar.
+tasks.withType<DokkaTask>().configureEach {
+    dokkaSourceSets.configureEach {
+        sourceRoots.from(file("src/main/kotlin"))
+        jdkVersion.set(17)
     }
 }
 

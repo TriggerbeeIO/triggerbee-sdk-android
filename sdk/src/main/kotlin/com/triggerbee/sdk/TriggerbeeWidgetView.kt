@@ -166,11 +166,11 @@ public fun TriggerbeeWidgetView(
                         // `closedWidgets[].reason` on next pageload to apply repetition rules.
                         Triggerbee.closeWidget(widgetId, parsed)
                         // Only tear down the WebView for actual close events. The widget engine
-                        // fires `update` on three triggers: Closed (real close — Dismissal /
-                        // ContinueShowing), AfterSubmit (Conversion — engine may transition to
-                        // a success state, keep the WebView alive), and ButtonClicked
-                        // (ClickThrough — button might or might not close; if it does, a
-                        // separate Closed event with Dismissal fires after).
+                        // fires `update` on three triggers: Closed (real close — Dismissal),
+                        // AfterSubmit (Conversion — engine may transition to a success state,
+                        // keep the WebView alive), and ButtonClicked (ClickThrough — button
+                        // click; may or may not close, and any subsequent close fires its own
+                        // Dismissal event).
                         if (isClosingReason(reason)) {
                             onClosed(parsed)
                         }
@@ -244,8 +244,7 @@ private fun createWebView(
     onNavigate: (String) -> Unit,
 ): WebView = WebView(context).apply {
     webViewRef[0] = this
-    // Injected under `TriggerbeeEmbedBridge`; embed-app-service.ts forwards calls to this
-    // on Android and to window.webkit.messageHandlers.triggerbee on iOS.
+    // JavaScriptInterface bridge — the widget engine calls into these methods via window.TriggerbeeEmbedBridge.
     addJavascriptInterface(TriggerbeeEmbedBridge(onUpdate, onBoundsChanged, onLoadFailed, onNavigate, logger), "TriggerbeeEmbedBridge")
     webChromeClient = TriggerbeeWebChromeClient(logger)
     webViewClient = TriggerbeeWebViewClient(logger, onLoadFailed)
@@ -378,7 +377,7 @@ private class TriggerbeeWebViewClient(
 private fun parseCloseReason(raw: String?): CloseReason? = when (raw) {
     "Dismissal" -> CloseReason.Dismissal
     "Conversion" -> CloseReason.Conversion
-    "ContinueShowing" -> CloseReason.ContinueShowing
+    "ClickThrough" -> CloseReason.ClickThrough
     else -> null
 }
 
@@ -389,7 +388,7 @@ private fun parseCloseReason(raw: String?): CloseReason? = when (raw) {
  * *every* button click; if the click also closes the widget, an explicit `Closed` event with
  * `Dismissal` arrives afterwards and triggers the actual tear-down here.
  */
-private fun isClosingReason(raw: String?): Boolean = raw == "Dismissal" || raw == "ContinueShowing"
+private fun isClosingReason(raw: String?): Boolean = raw == "Dismissal"
 
 
 /**

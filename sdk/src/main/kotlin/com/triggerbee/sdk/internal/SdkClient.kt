@@ -129,7 +129,7 @@ internal class SdkClient(
                 device = deviceInfoDto,
             ) to newPageviews
         }
-        config.logger.debug("pageload: page=$page title=$title pageviews=$pageviews secondsOnPage=$secondsOnPage")
+        config.logger.debug("pageload: page=$page title=$title pageviews=$pageviews secondsOnPage=$secondsOnPage ${formatClosedWidgets(closedWidgets)}")
         val response = request("pageload") { api.pageload(config.siteId, request) }
         val results = response.toResults()
         config.logger.debug("pageload → ${formatResults(results)}")
@@ -149,7 +149,7 @@ internal class SdkClient(
                 device = deviceInfoDto,
             ) to current.pageviews
         }
-        config.logger.debug("recheck: page=$page pageviews=$pageviews secondsOnPage=$secondsOnPage")
+        config.logger.debug("recheck: page=$page pageviews=$pageviews secondsOnPage=$secondsOnPage ${formatClosedWidgets(closedWidgets)}")
         val response = request("recheck") { api.check(config.siteId, request) }
         val results = response.toResults()
         config.logger.debug("recheck → ${formatResults(results)}")
@@ -162,6 +162,13 @@ internal class SdkClient(
             separator = ", ",
             postfix = "]",
         ) { "id=${it.id} result=${it.result} openDelay=${it.openDelay}" }
+
+    private fun formatClosedWidgets(entries: List<ClosedWidgetEntry>): String =
+        entries.joinToString(
+            prefix = "${entries.size} closedWidgets [",
+            separator = ", ",
+            postfix = "]",
+        ) { "id=${it.widgetId} reason=${it.reason} pageviews=${it.pageviews} closedTime=${it.closedTime}" }
 
     fun closeWidget(widgetId: Int, reason: CloseReason?): Job {
         config.logger.debug("closeWidget: id=$widgetId reason=$reason")
@@ -181,7 +188,7 @@ internal class SdkClient(
                 closedWidgets = closedWidgets.filterNot { it.widgetId == widgetId } + entry
                 try {
                     sessionStore.setClosedWidgets(closedWidgets)
-                    config.logger.debug("closeWidget ✓")
+                    config.logger.debug("closeWidget ✓ ${formatClosedWidgets(closedWidgets)}")
                 } catch (e: Exception) {
                     config.logger.warn("closeWidget persistence failed", e)
                 }
@@ -308,8 +315,9 @@ internal class SdkClient(
     fun widgetUrl(widgetId: Int): String {
         val uid = sessionState.value.uid
         require(uid != 0L) { "Call Triggerbee.start() before widgetUrl()" }
-        val url = "${config.baseUrl}/v1/client/widgets/$widgetId/html" +
-            "?siteId=${config.siteId}&uid=$uid&applicationId=${URLEncoder.encode(applicationId, "UTF-8")}"
+        val url = "${config.baseUrl}/v2/client/widgets/$widgetId/html" +
+            "?siteId=${config.siteId}&uid=$uid&applicationId=${URLEncoder.encode(applicationId, "UTF-8")}" +
+            "&targetDevice=NativeApp"
         config.logger.debug("widgetUrl: id=$widgetId → $url")
         return url
     }
@@ -324,6 +332,7 @@ internal class SdkClient(
         audienceState = sessionStore.getAudienceState()
         sessionState.value = SessionContext(uid = uid, pageviews = 0, identifier = identifier)
         initialised = true
+        config.logger.debug("DataStore loaded: uid=$uid identifier=$identifier ${formatClosedWidgets(closedWidgets)}")
     }
 
     /** Snapshot of identifier + audience state for the next outgoing widget-check request. */
@@ -386,11 +395,14 @@ internal class SdkClient(
         val httpClient = OkHttpClient.Builder()
             .connectTimeout(config.connectTimeout.inWholeMilliseconds, TimeUnit.MILLISECONDS)
             .readTimeout(config.readTimeout.inWholeMilliseconds, TimeUnit.MILLISECONDS)
-            // Every /v1/client/* endpoint is gated by X-Application-Id on the gateway. Attach the
+            // Every /v2/client/* endpoint is gated by X-Application-Id on the gateway. Attach the
             // value (auto-detected from Context.packageName at init, or overridden via TriggerbeeConfig.applicationId)
-            // to every outgoing request.
+            // to every outgoing request. X-Target-Device is required on V2 widget endpoints; harmless on event endpoints.
             .addInterceptor { chain ->
-                chain.proceed(chain.request().newBuilder().header("X-Application-Id", applicationId).build())
+                chain.proceed(chain.request().newBuilder()
+                    .header("X-Application-Id", applicationId)
+                    .header("X-Target-Device", "NativeApp")
+                    .build())
             }
             .apply {
                 config.userAgent?.let { ua ->

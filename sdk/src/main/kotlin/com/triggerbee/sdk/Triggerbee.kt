@@ -1,6 +1,9 @@
 package com.triggerbee.sdk
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
+import android.webkit.WebView
 import com.triggerbee.sdk.internal.DataStoreSessionStore
 import com.triggerbee.sdk.internal.DeviceInfoCollector
 import com.triggerbee.sdk.internal.SdkClient
@@ -43,12 +46,35 @@ public object Triggerbee {
     /**
      * Configure the SDK. Call once, typically in `Application.onCreate`. Calling a second
      * time replaces the configuration (useful for tests; avoid in production code).
+     *
+     * Also kicks off a one-time WebView warmup on the main thread: the first WebView in an
+     * app process pays a ~500–800ms cost for Chromium's renderer process spin-up. Doing that
+     * once at init means the widget WebView opens with a warm process.
      */
     public fun init(context: Context, config: TriggerbeeConfig) {
         val applicationId = config.applicationId ?: context.packageName
         val sessionStore = DataStoreSessionStore(context.applicationContext)
         val deviceInfo = DeviceInfoCollector.collect(context.applicationContext)
         client = SdkClient(config, applicationId, sessionStore, deviceInfo)
+        warmupWebView(context.applicationContext)
+    }
+
+    // Held for the process lifetime so Chromium's renderer process stays alive between the
+    // warmup load and the first real widget open. If we let this get GC'd the renderer can
+    // be reaped and the next widget open pays cold-start again.
+    @Volatile
+    private var warmupWebViewInstance: WebView? = null
+
+    private fun warmupWebView(applicationContext: Context) {
+        Handler(Looper.getMainLooper()).post {
+            if (warmupWebViewInstance != null) { return@post }
+            try {
+                warmupWebViewInstance = WebView(applicationContext).apply { loadUrl("about:blank") }
+                logger().debug("WebView warmup started")
+            } catch (e: Throwable) {
+                logger().warn("WebView warmup failed", e)
+            }
+        }
     }
 
     /**

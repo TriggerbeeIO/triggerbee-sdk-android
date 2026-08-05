@@ -13,7 +13,7 @@ plugins {
 // Single source of truth for the SDK version: shared between the published Maven artifact
 // coordinates below and the runtime BuildConfig.SDK_VERSION constant the device-info
 // collector reports to the backend.
-val sdkVersion = "0.1.0"
+val sdkVersion = "0.1.1"
 
 android {
     namespace = "com.triggerbee.sdk"

@@ -261,6 +261,7 @@ private fun createWebView(
     setBackgroundColor(android.graphics.Color.TRANSPARENT)
     // Without explicit MATCH_PARENT layoutParams, WebView keeps its previous measure between modifier changes.
     layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+    logger.debug("WebView.loadUrl: $url")
     loadUrl(url)
 }
 
@@ -284,7 +285,7 @@ private class TriggerbeeEmbedBridge(
             position = WidgetPosition.fromString(position),
             layout = WidgetLayout.fromString(layout),
         )
-        logger.debug("widgetBounds: ${width}x$height @ ${position ?: "(no position)"}")
+        logger.debug("setBounds: ${width}x$height position=${position ?: "(none)"} layout=${layout ?: "(none)"}")
         mainHandler.post { onBoundsChanged(parsed) }
     }
 

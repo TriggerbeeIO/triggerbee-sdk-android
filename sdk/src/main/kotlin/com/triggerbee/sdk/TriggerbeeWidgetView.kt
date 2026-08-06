@@ -283,7 +283,7 @@ private class TriggerbeeEmbedBridge(
             position = WidgetPosition.fromString(position),
             layout = WidgetLayout.fromString(layout),
         )
-        logger.debug("widgetBounds: ${width}x$height @ ${position ?: "(no position)"}")
+        logger.debug("setBounds: ${width}x$height position=${position ?: "(none)"} layout=${layout ?: "(none)"}")
         mainHandler.post { onBoundsChanged(parsed) }
     }
 

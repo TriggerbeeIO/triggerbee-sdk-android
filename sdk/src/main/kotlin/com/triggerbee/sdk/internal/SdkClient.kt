@@ -322,6 +322,21 @@ internal class SdkClient(
         return url
     }
 
+    // Base URL of the configured Triggerbee gateway (e.g. https://api.triggerbee.com). Exposed so
+    // the prefetch document has a real origin for its <link rel=preload> to resolve against.
+    val baseUrl: String get() = config.baseUrl
+
+    // URLs of the two <script async> resources embedded by /v2/client/widgets/{id}/html.
+    // Same per-site content across visitors — safe for the SDK to prefetch into the WebView's
+    // shared HTTP cache. The widget HTML itself is per-visitor (uid varies) so we don't prefetch it.
+    fun trackingScriptUrl(): String =
+        "${config.baseUrl}/v2/client/scripts/core?siteId=${config.siteId}" +
+            "&targetDevice=NativeApp&applicationId=${URLEncoder.encode(applicationId, "UTF-8")}"
+
+    fun siteScriptUrl(): String =
+        "${config.baseUrl}/v2/client/scripts/site?siteId=${config.siteId}" +
+            "&targetDevice=NativeApp&applicationId=${URLEncoder.encode(applicationId, "UTF-8")}"
+
     // Initial load happens lazily under the lock so concurrent first calls don't race the
     // DataStore reads. After the first successful load `initialised` stays true.
     private suspend fun ensureLoaded() {

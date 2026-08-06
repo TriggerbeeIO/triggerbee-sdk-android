@@ -77,6 +77,45 @@ public object Triggerbee {
         }
     }
 
+    // Once-per-process guard so we don't reload the prefetch document every pageload; the two
+    // script responses are per-site (not per-widget or per-visitor), so a single populate of the
+    // WebView's shared HTTP cache serves every widget open for the rest of the app process.
+    @Volatile
+    private var scriptsPrefetched: Boolean = false
+
+    /**
+     * Prime the WebView's shared HTTP cache with the two <script async> resources embedded by
+     * /v2/client/widgets/{id}/html. Called automatically from [pageload]/[recheck] whenever a
+     * matching widget is returned, so by the time the host app mounts [TriggerbeeWidgetView] the
+     * scripts are already in cache and Phase 2→4 skips their network round-trips.
+     *
+     * Loads a tiny prefetch document into the same WebView instance kept warm by [warmupWebView]
+     * — Chromium WebViews share HTTP cache within an app process, so populating it from any
+     * WebView benefits every subsequent one.
+     */
+    private fun prefetchScripts() {
+        if (scriptsPrefetched) { return }
+        val activeClient = client ?: return
+        val warmupView = warmupWebViewInstance ?: return
+        scriptsPrefetched = true
+        val trackingUrl = activeClient.trackingScriptUrl()
+        val siteUrl = activeClient.siteScriptUrl()
+        val baseUrl = activeClient.baseUrl
+        Handler(Looper.getMainLooper()).post {
+            try {
+                val html = "<html><head>" +
+                    "<link rel=\"preload\" as=\"script\" href=\"$trackingUrl\"/>" +
+                    "<link rel=\"preload\" as=\"script\" href=\"$siteUrl\"/>" +
+                    "</head><body></body></html>"
+                warmupView.loadDataWithBaseURL(baseUrl, html, "text/html", "utf-8", null)
+                logger().debug("prefetchScripts started")
+            } catch (e: Throwable) {
+                scriptsPrefetched = false
+                logger().warn("prefetchScripts failed", e)
+            }
+        }
+    }
+
     /**
      * Opt the visitor out of all Triggerbee tracking for the rest of the process lifetime.
      * After this call every public method becomes a silent no-op (suspend methods return
@@ -127,7 +166,9 @@ public object Triggerbee {
         secondsOnPage: Int = 0,
     ): List<WidgetCheckResponse> {
         if (disabled) { return emptyList() }
-        return require().pageload(page, title, secondsOnPage)
+        val results = require().pageload(page, title, secondsOnPage)
+        if (results.any { it.result }) { prefetchScripts() }
+        return results
     }
 
     /**
@@ -136,7 +177,9 @@ public object Triggerbee {
      */
     public suspend fun recheck(page: String, secondsOnPage: Int): List<WidgetCheckResponse> {
         if (disabled) { return emptyList() }
-        return require().recheck(page, secondsOnPage)
+        val results = require().recheck(page, secondsOnPage)
+        if (results.any { it.result }) { prefetchScripts() }
+        return results
     }
 
     /**

@@ -260,6 +260,7 @@ private fun createWebView(
     setBackgroundColor(android.graphics.Color.TRANSPARENT)
     // Without explicit MATCH_PARENT layoutParams, WebView keeps its previous measure between modifier changes.
     layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+    logger.debug("WebView.loadUrl: $url")
     loadUrl(url)
 }
 

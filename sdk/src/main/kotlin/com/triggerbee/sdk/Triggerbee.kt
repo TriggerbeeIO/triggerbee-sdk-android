@@ -14,7 +14,9 @@ import com.triggerbee.sdk.models.BatchPurchase
 import com.triggerbee.sdk.models.CloseReason
 import com.triggerbee.sdk.models.SessionContext
 import com.triggerbee.sdk.models.WidgetCheckResponse
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.withContext
 import java.security.SecureRandom
 
 /**
@@ -93,7 +95,7 @@ public object Triggerbee {
      * — Chromium WebViews share HTTP cache within an app process, so populating it from any
      * WebView benefits every subsequent one.
      */
-    private fun prefetchScripts() {
+    private suspend fun prefetchScripts() {
         if (scriptsPrefetched) { return }
         val activeClient = client ?: return
         val warmupView = warmupWebViewInstance ?: return
@@ -101,7 +103,11 @@ public object Triggerbee {
         val trackingUrl = activeClient.trackingScriptUrl()
         val siteUrl = activeClient.siteScriptUrl()
         val baseUrl = activeClient.baseUrl
-        Handler(Looper.getMainLooper()).post {
+        // Dispatchers.Main.immediate — runs synchronously when [pageload]/[recheck] resume on Main
+        // so the WebView load kicks off BEFORE the calling coroutine yields back to the caller,
+        // which is what triggers Compose to mount the widget view. Handler.post would queue after,
+        // costing 50-130ms head start on the widget's own script fetches.
+        withContext(Dispatchers.Main.immediate) {
             try {
                 val html = "<html><head>" +
                     "<link rel=\"preload\" as=\"script\" href=\"$trackingUrl\"/>" +

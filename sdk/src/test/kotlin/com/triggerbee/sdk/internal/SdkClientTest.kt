@@ -106,7 +106,7 @@ internal class SdkClientTest {
 
         val request = server.takeRequest()
         assertThat(request.method).isEqualTo("POST")
-        assertThat(request.path).isEqualTo("/v1/client/widgets/pageload")
+        assertThat(request.path).isEqualTo("/v2/client/widgets/pageload")
         assertThat(request.getHeader("X-Site-Id")).isEqualTo("12345")
     }
 
@@ -180,7 +180,7 @@ internal class SdkClientTest {
 
         // Assert
         val request = server.takeRequest()
-        assertThat(request.path).isEqualTo("/v1/client/events/555/identify")
+        assertThat(request.path).isEqualTo("/v2/client/events/555/identify")
         assertThat(request.getHeader("X-Site-Id")).isEqualTo("12345")
         assertThat(request.body.readUtf8()).contains("\"identifier\":\"user@example.com\"")
         assertThat(sessionStore.getIdentifier()).isEqualTo("user@example.com")
@@ -197,7 +197,7 @@ internal class SdkClientTest {
 
         // Assert
         val request = server.takeRequest()
-        assertThat(request.path).isEqualTo("/v1/client/events/555/goal")
+        assertThat(request.path).isEqualTo("/v2/client/events/555/goal")
         val body = request.body.readUtf8()
         assertThat(body).contains("\"name\":\"purchase\"")
         assertThat(body).contains("\"revenue\":\"199.00\"")
@@ -231,7 +231,7 @@ internal class SdkClientTest {
 
         // Assert
         val request = server.takeRequest()
-        assertThat(request.path).isEqualTo("/v1/client/events/555/purchase")
+        assertThat(request.path).isEqualTo("/v2/client/events/555/purchase")
         assertThat(request.getHeader("X-Site-Id")).isEqualTo("12345")
         val body = request.body.readUtf8()
         assertThat(body).contains("\"revenue\":\"199.99\"")
@@ -266,7 +266,7 @@ internal class SdkClientTest {
 
         // Assert
         val request = server.takeRequest()
-        assertThat(request.path).isEqualTo("/v1/client/events/555/pageview")
+        assertThat(request.path).isEqualTo("/v2/client/events/555/pageview")
         assertThat(request.getHeader("X-Site-Id")).isEqualTo("12345")
         val body = request.body.readUtf8()
         assertThat(body).contains("\"path\":\"/profile\"")
@@ -317,10 +317,11 @@ internal class SdkClientTest {
         // applicationId "com.example.test" doesn't need percent-encoding but the encoder still
         // runs; using a value with reserved chars would prove the encoding step works.
         assertThat(url).startsWith(server.url("/").toString().trimEnd('/'))
-        assertThat(url).contains("/v1/client/widgets/31335/html")
+        assertThat(url).contains("/v2/client/widgets/31335/html")
         assertThat(url).contains("siteId=12345")
         assertThat(url).contains("uid=8335234722033190")
         assertThat(url).contains("applicationId=com.example.test")
+        assertThat(url).contains("targetDevice=NativeApp")
     }
 
     @Test
@@ -352,7 +353,7 @@ internal class SdkClientTest {
 
         val request = server.takeRequest()
         assertThat(request.method).isEqualTo("POST")
-        assertThat(request.path).isEqualTo("/v1/client/widgets/audiences/check")
+        assertThat(request.path).isEqualTo("/v2/client/widgets/audiences/check")
         assertThat(request.getHeader("X-Site-Id")).isEqualTo("12345")
     }
 
@@ -458,7 +459,7 @@ internal class SdkClientTest {
         // Assert
         val request = server.takeRequest()
         assertThat(request.method).isEqualTo("POST")
-        assertThat(request.path).isEqualTo("/v1/client/events/555/batch")
+        assertThat(request.path).isEqualTo("/v2/client/events/555/batch")
         assertThat(request.getHeader("X-Site-Id")).isEqualTo("12345")
         val body = request.body.readUtf8()
         assertThat(body).contains("\"pageviews\":[{\"path\":\"/home\",\"title\":\"Home\"}]")

@@ -24,7 +24,7 @@ public data class WidgetCheckResponse(
 public enum class CloseReason {
     Dismissal,
     Conversion,
-    ContinueShowing,
+    ClickThrough,
 }
 
 /**

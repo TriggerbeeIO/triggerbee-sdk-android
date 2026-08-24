@@ -5,6 +5,44 @@ All notable changes to the Triggerbee Android SDK are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2026-08-18
+
+First stable release. The public API surface (`Triggerbee`, `TriggerbeeConfig`,
+`TriggerbeeWidgetView`) is committed to long-term; future breaking changes bump the major
+version per semver.
+
+### Changed
+
+- **V2 backend endpoints** — all traffic moved to the `/v2/client/*` routes on
+  `api.triggerbee.com`, authenticated by `X-Application-Id`. Widget endpoints additionally
+  send the required `X-Target-Device: NativeApp` header.
+
+### Added
+
+- **WebView prefetch on pageload** — when `pageload()`/`recheck()` returns a matching widget,
+  the core and site script bundles are fetched into the shared WebView HTTP cache so the
+  eventual widget open skips both requests. Fires once per app process. Cut cold-open time
+  from roughly 2900ms to 2000ms in testing.
+
+### Fixed
+
+- **ClickThrough close reason** was parsed as `null` instead of the reported reason.
+
+### Coordinates
+
+```kotlin
+implementation("com.triggerbee:triggerbee-android:1.0.0")
+```
+
+## [0.1.1] - 2026-08-05
+
+### Added
+
+- **WebView warmup on `init()`** — pays the Chromium cold-start cost during app startup
+  rather than on first widget open.
+- Additional internal logging around WebView and DataStore state, routed through the
+  configured `TriggerbeeLogger` (still silent under the default `NoOpLogger`).
+
 ## [0.1.0]
 
 First public release. Native Android SDK for the Triggerbee platform.

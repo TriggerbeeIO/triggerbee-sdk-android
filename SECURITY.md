@@ -16,14 +16,13 @@ mitigation within **30 days** for confirmed issues, depending on severity.
 
 ## Supported Versions
 
-While we're pre-1.0, only the **latest minor release** receives security fixes.
-Once 1.0 ships, this policy will extend to the previous major version for 12
-months after a new major is released.
+The **latest minor release** receives security fixes. When a new major version
+ships, the previous major continues to receive them for 12 months.
 
 | Version  | Supported |
 |----------|-----------|
-| 0.1.x    | ✓         |
-| < 0.1.0  | ✗         |
+| 1.0.x    | ✓         |
+| < 1.0.0  | ✗         |
 
 ## Scope
 

@@ -4,7 +4,8 @@ Native Android SDK for the Triggerbee platform. Wraps the public REST API,
 generates and persists the visitor id locally, and exposes a small `suspend`-based surface
 for pageload tracking, widget checks, identification, and goal logging.
 
-> **Status:** 0.1.0 — pre-1.0. The public API may change in minor releases until 1.0.
+> **Status:** 1.0.0 — stable. `Triggerbee`, `TriggerbeeConfig`, and `TriggerbeeWidgetView` are
+> the supported public surface; breaking changes to them will bump the major version per semver.
 
 **API reference:** <https://triggerbeeio.github.io/triggerbee-sdk-android/> — auto-generated from KDoc on every `main` push.
 
@@ -21,7 +22,7 @@ full example; this is the bird's-eye list.
 - [ ] `minSdk ≥ 24`, JDK 17 toolchain
 - [ ] Add the dependency:
   ```kotlin
-  implementation("com.triggerbee:triggerbee-android:0.1.0")
+  implementation("com.triggerbee:triggerbee-android:1.0.0")
   ```
 - [ ] Confirm `mavenCentral()` is in your `settings.gradle.kts` (default for new projects)
 

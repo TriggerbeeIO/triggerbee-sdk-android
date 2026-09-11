@@ -14,9 +14,11 @@ for pageload tracking, widget checks, identification, and goal logging.
 A copy-paste checklist for getting Triggerbee live in your app. The next section has the
 full example; this is the bird's-eye list.
 
-**Prereqs from Triggerbee**
+**Before you start**
 - [ ] Get your `siteId` (numeric) from your Triggerbee account manager
-- [ ] Ask us to allow-list your app's `applicationId` (e.g. `com.acme.shop`) on your account
+- [ ] Add your app's `applicationId` (e.g. `com.acme.shop`) to your account under
+      **Account Settings → General → "Also accept traffic from the following native apps"**,
+      one per line
 
 **Build setup** *(in `app/build.gradle.kts`)*
 - [ ] `minSdk ≥ 24`, JDK 17 toolchain
